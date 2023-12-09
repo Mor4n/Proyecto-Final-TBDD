@@ -13,17 +13,16 @@ namespace ConsoleApp1
 
         static void Main(string[] args)
         {
-            creacionInicial();
-            
+         string conexionABDDADMIN = "Data Source=DESKTOP-PPMBHAK\\SQLEXPRESS;Initial Catalog=master;User ID=sa;Password=;";
+
+        creacionInicial(conexionABDDADMIN);
+        crearLogin(conexionABDDADMIN);
 
 
         }
-
-        public static void creacionInicial()
+        public static void creacionInicial(string con)
         {
-            string conexionABDD = "Data Source=DESKTOP-PPMBHAK\\SQLEXPRESS;Initial Catalog=master;User ID=sa;Password=;";
-
-            using (SqlConnection conexion = new SqlConnection(conexionABDD))
+            using (SqlConnection conexion = new SqlConnection(con))
             {
 
                 string[] consultas = new string[7];
@@ -87,7 +86,7 @@ namespace ConsoleApp1
             }
         }
 
-            public static void crearLogin()
+            public static void crearLogin(string con)
             {
             //LOGIN
             //Añadir capa de seguridad
@@ -96,18 +95,18 @@ namespace ConsoleApp1
               SqlCredential credencial = new SqlCredential("", theSecureString);*/
 
             //Conexion siendo SA porque SA puede crear usuarios
-            string connectionString = "Data Source=DESKTOP-PPMBHAK\\SQLEXPRESS;" +
-                    "Initial Catalog=master;" +
-                    "User ID=sa;Password=;";
+           // string connectionString = "Data Source=DESKTOP-PPMBHAK\\SQLEXPRESS;Initial Catalog=master;User ID=sa;Password=;";
 
-                using (SqlConnection conexion = new SqlConnection(connectionString))
+                using (SqlConnection conexion = new SqlConnection(con))
                 {
                     Console.WriteLine("Inserte nombre");
                     string nombre = Console.ReadLine();
                     Console.WriteLine("Inserte psswd");
                     string pass = Console.ReadLine();
-                    string consultaCrearUsuario = $"CREATE LOGIN {nombre} WITH PASSWORD = '{pass}'";
 
+                string[] consultas = new string[3];
+                consultas[0] = $"CREATE LOGIN {nombre} WITH PASSWORD = '{pass}'";
+                consultas[1]=$"CREATE USER {nombre} for login {nombre} with default_schema=proyecto";
                     try
                     {
                         // Abrir la conexión
@@ -116,14 +115,18 @@ namespace ConsoleApp1
                         // Realizar operaciones en la base de datos aquí
 
                         Console.WriteLine("Conexión exitosa");
+                        
+                     for (int i = 0; i < consultas.Length; i++)
+                      {
 
-                        using (SqlCommand command = new SqlCommand(consultaCrearUsuario, conexion))
+                        using (SqlCommand command = new SqlCommand(consultas[i], conexion))
                         {
                             // Ejecutar la consulta
                             command.ExecuteNonQuery();
-                            Console.WriteLine("Usuario creado exitosamente");
+                            Console.WriteLine($"Creado exitosamente {i}");
                         }
                     }
+                }
                     catch (Exception ex)
                     {
                         Console.WriteLine("Error: " + ex.Message);
