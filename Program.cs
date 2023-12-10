@@ -44,6 +44,7 @@ namespace ConsoleApp1
 
                 consultas[5] = "CREATE TABLE proyecto.Libreria(" +
                     "IdLibreria int primary key Identity(1,1)," +
+                    "Portada varbinary(max)"  +
                     "IdUsuario int not null," +
                     "constraint IdUsuario FOREIGN KEY (IdUsuario) REFERENCES proyecto.Usuario (IdUsuario)," +
                     "IdJuego INT NOT NULL," +
@@ -107,10 +108,12 @@ namespace ConsoleApp1
                     string codigoSecreto = Console.ReadLine();
 
                 
+                //AQUI PROBAR CON HACER EL USER EN OTRA CONSULTA, O SEA, EJECUTAR EL USING COPYPASTE POR SEGUNDA VEZ A VER SI FUNCIONA
 
-                string[] consultas = new string[2];
-                consultas[0] = $"CREATE LOGIN {nombre} WITH PASSWORD = '{pass}'";
-                consultas[1]=$"CREATE USER {nombre} for login {nombre} with default_schema=proyecto";
+                string[] consultas = new string[3];
+                consultas[0] = "use ProyectoFinalTBDD";
+                consultas[1] = $"CREATE LOGIN {nombre} WITH PASSWORD = '{pass}'";
+                consultas[2]= $"create user {nombre} for login {nombre} with default_schema = proyecto";
                 
                     try
                     {
@@ -119,10 +122,9 @@ namespace ConsoleApp1
 
                         // Realizar operaciones en la base de datos aquí
 
-                        Console.WriteLine("Conexión exitosa");
-                        
-                     for (int i = 0; i < consultas.Length; i++)
-                      {
+                     Console.WriteLine("-----Conexión exitosa para crear login");
+                    for(int i=0; i<consultas.Length; i++)
+                    {
 
                         using (SqlCommand command = new SqlCommand(consultas[i], conexion))
                         {
@@ -130,38 +132,38 @@ namespace ConsoleApp1
                             command.ExecuteNonQuery();
                             Console.WriteLine($"Creado exitosamente {i}");
                         }
+
                     }
-                    string[] permisosConsulta = new string[2];
-                     //Dar permisos
+
+
+                    string[] permisosConsulta = new string[3];
+                    permisosConsulta[0] = "use ProyectoFinalTBDD";
+                    //Dar permisos
+
+                    Console.WriteLine("-----dAR PERMISOS");
                     if (codigoSecreto == "administrador")
                     {
                         //Si es admin puede hacer todo incluso crear backup y restaurar
-                        permisosConsulta[0] = $"GRANT EXECUTE, INSERT, UPDATE, DELETE, SELECT, ALTER TO [{nombre}]";
-                        permisosConsulta[1] = $"EXEC sp_addrolemember 'db_backupoperator', {nombre}";
+                        permisosConsulta[1] = $"GRANT EXECUTE, INSERT, UPDATE, DELETE, SELECT, ALTER TO {nombre}";
+                        permisosConsulta[2] = $"EXEC sp_addrolemember 'db_backupoperator', {nombre}";
 
-                       for (int i = 0; i < permisosConsulta.Length; i++)
-                        {
-                            using (SqlCommand command = new SqlCommand(permisosConsulta[i], conexion))
-                            {
-                                // Ejecutar la consulta
-                                command.ExecuteNonQuery();
-                                Console.WriteLine($"Creado exitosamente ");
-                            }
-                        }
+                      
 
                     }
-                    //Necesario revisar aquí que el usuario NO pueda ver la tabla auditoria, posiblemente denegarle el acceso
                     else
                     {
                         //Si no lo es, entonces solo puede ver
-                        permisosConsulta[0] = $"GRANT SELECT TO [{nombre}]";
-                        using (SqlCommand command = new SqlCommand(permisosConsulta[0], conexion))
+                        permisosConsulta[1] = $"GRANT SELECT TO {nombre}";
+                        permisosConsulta[2] = $"DENY SELECT ON proyecto.Auditoria TO {nombre}";
+                    }
+                    for (int i = 0; i < permisosConsulta.Length; i++)
+                    {
+                        using (SqlCommand command = new SqlCommand(permisosConsulta[i], conexion))
                         {
                             // Ejecutar la consulta
                             command.ExecuteNonQuery();
-                            Console.WriteLine($"Creado exitosamente ");
+                            Console.WriteLine($"Creado exitosamente {i}");
                         }
-
                     }
 
                 }
