@@ -103,10 +103,15 @@ namespace ConsoleApp1
                     string nombre = Console.ReadLine();
                     Console.WriteLine("Inserte psswd");
                     string pass = Console.ReadLine();
+                Console.WriteLine("Inserte código de administrador"); ;
+                    string codigoSecreto = Console.ReadLine();
 
-                string[] consultas = new string[3];
+                
+
+                string[] consultas = new string[2];
                 consultas[0] = $"CREATE LOGIN {nombre} WITH PASSWORD = '{pass}'";
                 consultas[1]=$"CREATE USER {nombre} for login {nombre} with default_schema=proyecto";
+                
                     try
                     {
                         // Abrir la conexión
@@ -126,6 +131,39 @@ namespace ConsoleApp1
                             Console.WriteLine($"Creado exitosamente {i}");
                         }
                     }
+                    string[] permisosConsulta = new string[2];
+                     //Dar permisos
+                    if (codigoSecreto == "administrador")
+                    {
+                        //Si es admin puede hacer todo incluso crear backup y restaurar
+                        permisosConsulta[0] = $"GRANT EXECUTE, INSERT, UPDATE, DELETE, SELECT, ALTER TO [{nombre}]";
+                        permisosConsulta[1] = $"EXEC sp_addrolemember 'db_backupoperator', {nombre}";
+
+                       for (int i = 0; i < permisosConsulta.Length; i++)
+                        {
+                            using (SqlCommand command = new SqlCommand(permisosConsulta[i], conexion))
+                            {
+                                // Ejecutar la consulta
+                                command.ExecuteNonQuery();
+                                Console.WriteLine($"Creado exitosamente ");
+                            }
+                        }
+
+                    }
+                    //Necesario revisar aquí que el usuario NO pueda ver la tabla auditoria, posiblemente denegarle el acceso
+                    else
+                    {
+                        //Si no lo es, entonces solo puede ver
+                        permisosConsulta[0] = $"GRANT SELECT TO [{nombre}]";
+                        using (SqlCommand command = new SqlCommand(permisosConsulta[0], conexion))
+                        {
+                            // Ejecutar la consulta
+                            command.ExecuteNonQuery();
+                            Console.WriteLine($"Creado exitosamente ");
+                        }
+
+                    }
+
                 }
                     catch (Exception ex)
                     {
